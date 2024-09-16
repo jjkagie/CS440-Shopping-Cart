@@ -137,3 +137,4 @@ class Connection:
         self.close_conn()
         # return the result
         return bool(result)
+            
