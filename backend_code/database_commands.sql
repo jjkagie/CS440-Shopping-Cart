@@ -2,7 +2,7 @@
 CREATE DATABASE ShoppingDB;
 USE ShoppingDB;
 
--- GRANT ALL PRIVILEGES ON ShoppingDB.* TO 'msv68'@'localhost';
+-- GRANT ALL PRIVILEGES ON ShoppingDB.* TO '-----'@'localhost';
 
 CREATE TABLE Account
 	( username VARCHAR(64) PRIMARY KEY, 
