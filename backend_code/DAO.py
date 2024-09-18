@@ -2,12 +2,58 @@ from database_accessor import database_accessor as db_accessor
 
 import pdb
 
+# DAO (Database Access Object)
+########## Intended Use Cases:
+# create, update, load, and remove data from database
 
 
+########## Keep information in DAO and Database up-to-date
+# create: (provides access)
+#   adds DAO to the database
+#       database:   primary keys    - set to keys in DAO
+#                   values          - set to values in DAO
+#       DAO:        primary keys    - must not exist in database
+#                   values          - 
+
+# load: (provides access)
+#   stores database values into DAO
+#       database:   primary keys    - 
+#                   values          - 
+#       DAO:        primary keys    - must exist in database
+#                   values          - set to values in database
+
+# update: (requires write access)
+#       database:   primary keys    - 
+#                   values          - set to values in DAO
+#       DAO:        primary keys    - must exist in database
+#                   values          - must be non-null
+
+# remove: (requires write access)
+#       database:   primary keys    - removed
+#                   values          - removed
+#       DAO:        primary keys    - must exist in database
+#                   values          -
+
+
+########## modify/read information
+# get_<key/value>: (requires read access)
+#   returns the specified value from the DAO
+# set_<value>: (requires write access)
+#   changes the specified value in the DAO
+#       NOTE: does not automatically update the database
+
+########## access
+# write access:
+#   ability to change data in DAO and Database
+# read access:
+#   ability to read data in DAO and Database
+
+# start with no access
+# access can be modified in create() and load()
 class DAO:
+    # start with no access
     def __init__( self ):
-        self._write_access = False
-        self._read_access = False
+        self._access_remove()
     
     def create( self ):
         raise NotImplemented("Attempted to call abstract method")
@@ -26,19 +72,23 @@ class DAO:
 
     def read_access( self ):
         return self._read_access
-        
+
+    # full access to DAO
     def _access_set_all( self ):
         self._write_access = True
         self._read_access = True
 
+    # read-only access to DAO
     def _access_set_readonly( self ):
         self._write_access = False
         self._read_access = True
 
+    # no access to DAO
     def _access_remove( self ):
         self._write_access = False
         self._read_access = False
 
+    # sets access to match the DAO source
     def _access_set_by_reference( self, source ):
         self._write_access = source.write_access()
         self._read_access = source.read_access()
@@ -46,6 +96,22 @@ class DAO:
     def __str__( self ):
         return f"Write Access: {self._write_access}\nRead Access: {self._read_access}"
 
+# Account (DAO)
+##### keys/values
+# keys:
+#   username - name of the user
+# values:
+#   password - string to identify account owner
+#               * required for write access to account
+#               * often acts like a key
+
+##### access
+# full access       <- password provided
+# read-only access  <- read-only access
+
+##### additions
+# get cart:
+#   returns cart DAO associated with Account
 class Account(DAO):
     def __init__( self, username, password = None ):
         super().__init__()
@@ -56,6 +122,7 @@ class Account(DAO):
         if not self._read_access: return False
         return self._username
 
+    # exception: cannot read passowrd without write access
     def get_password( self ):
         if not self._write_access: return False
         return self._password
@@ -72,6 +139,7 @@ class Account(DAO):
             return True
         return False
 
+    # automate creation of cart when Account is created
     def create( self ):
         if self._password:
             if db_accessor.run_change(
@@ -97,15 +165,17 @@ class Account(DAO):
             return True
         return False
 
+    # if password is provided, full access
+    # if only username is provided, read-only access
     def load( self ):
-        # intent = read and write
+        # case password provided
         if self._password:
             if db_accessor.run_select(
                     "SELECT * FROM Account WHERE username=%s AND password=%s",
                     self._username,self._password):
                 self._access_set_all()
                 return True
-        # intent = write only
+        # case no password provided
         else:
             if db_accessor.run_select(
                     "SELECT * FROM Account WHERE username=%s",
@@ -114,7 +184,19 @@ class Account(DAO):
                 return True
         return False
 
+# Account (DAO)
+##### keys/values
+# keys:
+#   account - Account that owns the cart
 
+##### access
+# access = Account's access
+
+##### other
+# get_item_selection: (requires read access)
+#   returns list of ItemSelections stored in the cart
+# clear: (requires write access)
+#   removes all ItemSelections stores from the cart
 class ShoppingCart(DAO):
     def __init__( self, account ):
         super().__init__()
@@ -150,13 +232,17 @@ class ShoppingCart(DAO):
         self._access_set_by_reference( self._account )
         return True
 
+    # retuns list of all ItemSelections associated with Cart
+    # creates ItemSelection DAOs, along with corresponding Item DAOs
     def get_item_selections( self ):
         if not self.read_access(): return False
+        # generate a list of data about the selections
         selections = list()
         selection_results = db_accessor.run_select(
                                 "SELECT * FROM ItemSelection WHERE cart_id=%s",
                                 self.get_id())
         if selection_results:
+            # load DAOs from the Data of the ItemSelections
             for item_id,cart_id,quantity in selection_results:
                 item = Item(item_id)
                 item.load()
@@ -165,12 +251,24 @@ class ShoppingCart(DAO):
                 selections.append( selection )
         return selections
 
+    # remove all selections associated with this cart
     def clear( self ):
         if not self.write_access(): return False
         for selection in self.get_item_selections():
             selection.remove()
 
+# Item (DAO)
+##### keys/values
+# keys:
+#   item_id - integer id unique to the Item object
+#               no significance outside of this system
+# values:
+#   item_name - value allowing user to recognize item (determined by user, not unique)
+#   item_source - link to where the item can be purchased
 
+##### access
+# Access = Read-Only
+#   prevents customers from modifying data that other customers can use
 class Item(DAO):
     def __init__( self, item_id, item_name = None, item_source = None ):
         super().__init__()
@@ -219,6 +317,8 @@ class Item(DAO):
             return True
         return False
 
+    # update/remove:
+    #   due to not having write access, chose to skip implementation
     def update( self ):
         if not self._write_access: return False
         raise NotImplemented("Currently write access does not exist for Item\nInstead create a new Item")
@@ -227,6 +327,16 @@ class Item(DAO):
         if not self._write_access: return False
         raise NotImplemented("Currently write access does not exist for Item\nInstead create a new Item")
 
+# ItemSelection (DAO)
+##### keys/values
+# keys:
+#   cart - Cart that the ItemSelection belongs to
+#   item - Item that is being selected by the cart
+# values:
+#   quantity - amount of items stored in the cart
+
+##### access
+# access = Cart's access
 class ItemSelection( DAO ):
     def __init__( self, cart, item, quantity = None ):
         super().__init__()
@@ -286,10 +396,31 @@ class ItemSelection( DAO ):
             return True
         return False
 
+# clear database
+# NOTE: this method is for testing only
+#       running sql commands outside of DAO should not be necessary
+def clear_database_TESTING():
+    # clear accounts
+    select_result = db_accessor.run_select( "SELECT * FROM Account" )
+    if select_result:
+        for username,password in select_result:
+            account = Account(username,password)
+            account.load()
+            account.remove()
+
+    # clear items
+    select_result = db_accessor.run_select( "SELECT id FROM Item" )
+    if select_result:
+        for item_id in select_result:
+            item = Item(item_id)
+            item.load()
+            item.remove()
+        
 
 if __name__ == "__main__":
     test_accounts = True
     if test_accounts:
+        # run 1: new account with new password
         print( "First Run: New Password" )
         my_account = Account("Michael", "my_password")
         assert my_account.load() == False
@@ -297,6 +428,7 @@ if __name__ == "__main__":
         assert my_account.set_password("other_password") == True
         assert my_account.update() == True
 
+        # run 2: attempt to reaccess account with correct password
         print( "Second Run: Correct Password" )
         second_account = Account("Michael", "other_password")
         assert second_account.load() == True
@@ -304,6 +436,7 @@ if __name__ == "__main__":
         assert second_account.set_password("***********") == True
         assert second_account.update() == True
 
+        # run 3: attempt to reaccess account with incorrect password
         print( "Third Run: Incorrect Password" )
         third_account = Account("Michael", "******")
         assert third_account.load() == False
@@ -311,11 +444,14 @@ if __name__ == "__main__":
         assert third_account.set_password("******") == False
         assert third_account.update() == False
 
+        # run 4: attempt to reaccess account with correct password
+        #           verify data was not modified during by run 3
         print( "Verify Password" )
         fourth_account = Account("Michael", "***********")
         fourth_account.load()
         assert fourth_account.get_password() == "***********"
-        
+
+        # clear data
         print( "Remove Account" )
         assert my_account.remove() == True
 
@@ -353,10 +489,6 @@ if __name__ == "__main__":
 
         # delete Michael's account
         assert my_account.remove() == True
-
-
-
-
 
 
 
