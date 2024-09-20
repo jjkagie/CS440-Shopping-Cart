@@ -18,19 +18,19 @@ CREATE TABLE ShoppingCart
 DESCRIBE ShoppingCart;
 
 CREATE TABLE Item
-	( id int, 
-      item_name VARCHAR(64), 
+	( item_name VARCHAR(64), 
       item_source VARCHAR(256), 
-      PRIMARY KEY( id )
+      PRIMARY KEY( item_name,item_source )
 	);
 DESCRIBE Item;
 
 CREATE TABLE ItemSelection
-	( item_id int, 
+	( item_name VARCHAR(64), 
+      item_source VARCHAR(256), 
       cart_id VARCHAR(64), 
       quantity int, 
-      PRIMARY KEY (item_id, cart_id), 
-      FOREIGN KEY (item_id) REFERENCES Item(id), 
+      PRIMARY KEY (item_name, item_source, cart_id), 
+      FOREIGN KEY (item_name, item_source) REFERENCES Item(item_name, item_source), 
       FOREIGN KEY (cart_id) REFERENCES ShoppingCart(id)
 	);
 DESCRIBE ItemSelection;
@@ -66,7 +66,7 @@ SELECT * FROM ShoppingCart WHERE id="<username>";
 -- Get data to load ItemSelections DAO using ShoppingCart DAO
 SELECT * FROM ItemSelection WHERE cart_id="<username>";
 -- Get data to load Item DAO using ItemSelection DAO
-SELECT * FROM ITEM WHERE id="<ID#>";
+SELECT * FROM ITEM WHERE item_name="<item_name>" AND item_source="<item_source>";
 
 -- DAO.Create()
 -- INSERT INTO <TABLE_NAME> VALUES <VALUES>
