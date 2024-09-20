@@ -243,8 +243,8 @@ class ShoppingCart(DAO):
                                 self.get_id())
         if selection_results:
             # load DAOs from the Data of the ItemSelections
-            for item_id,cart_id,quantity in selection_results:
-                item = Item(item_id)
+            for item_name,item_source,cart_id,quantity in selection_results:
+                item = Item(item_name,item_source)
                 item.load()
                 selection = ItemSelection(self,item)
                 selection.load()
@@ -260,8 +260,8 @@ class ShoppingCart(DAO):
 # Item (DAO)
 ##### keys/values
 # keys:
-#   item_id - integer id unique to the Item object
-#               no significance outside of this system
+#   item_name - short name of the item (not necessarily unique)
+#   item_source - link to where the item can be purchased
 # values:
 #   item_name - value allowing user to recognize item (determined by user, not unique)
 #   item_source - link to where the item can be purchased
@@ -270,62 +270,47 @@ class ShoppingCart(DAO):
 # Access = Read-Only
 #   prevents customers from modifying data that other customers can use
 class Item(DAO):
-    def __init__( self, item_id, item_name = None, item_source = None ):
+    def __init__( self, item_name, item_source ):
         super().__init__()
-        self._id = item_id
         self._name = item_name
         self._source = item_source
-
-    def get_id( self ):
-        if not self.read_access(): return False
-        return self._id
 
     def get_name( self ):
         if not self.read_access(): return False
         return self._name
 
-    def set_name( self ):
-        if not self._write_access: return False
-        raise NotImplemented("Currently write access does not exist for Item\nInstead create a new Item")
-
     def get_source( self ):
         if not self.read_access(): return False
         return self._source
 
-    def set_source( self ):
-        if not self._write_access: return False
-        raise NotImplemented("Currently write access does not exist for Item\nInstead create a new Item")
-
     def create( self ):
         if db_accessor.run_change(
-                    "INSERT INTO Item VALUES (%s,%s,%s)",
-                    self._id,self._name,self._source):
+                    "INSERT INTO Item VALUES (%s,%s)",
+                    self._name,self._source):
             self._access_set_readonly()
             return True
         return False
 
     def load( self ):
         selection_result = db_accessor.run_select(
-                                "SELECT * FROM Item WHERE id=%s",
-                                self._id)
+                                "SELECT * FROM Item WHERE item_name=%s AND item_source=%s",
+                                self._name,self._source)
         if selection_result:
-            item_id, item_name, item_source = selection_result[0]
-            self._id = item_id
+            item_name, item_source = selection_result[0]
             self._name = item_name
             self._source = item_source
             self._access_set_readonly()
             return True
         return False
 
-    # update/remove:
-    #   due to not having write access, chose to skip implementation
     def update( self ):
         if not self._write_access: return False
-        raise NotImplemented("Currently write access does not exist for Item\nInstead create a new Item")
+        raise False # Item does not have values to change
 
     def remove( self ):
         if not self._write_access: return False
-        raise NotImplemented("Currently write access does not exist for Item\nInstead create a new Item")
+        db_accessor.run_change("DELETE FROM Item WHERE item_name=%s AND item_source=%s",
+                               self.get_name(),self.get_source())
 
 # ItemSelection (DAO)
 ##### keys/values
@@ -362,18 +347,21 @@ class ItemSelection( DAO ):
 
     def create( self ):
         if db_accessor.run_change(
-                    "INSERT INTO ItemSelection VALUES (%s,%s,%s)",
-                    self._item.get_id(),self._cart.get_id(),self._quantity):
+                    "INSERT INTO ItemSelection VALUES (%s,%s,%s,%s)",
+                    self._item.get_name(),self._item.get_source(),
+                    self._cart.get_id(),self._quantity):
             self._access_set_by_reference( self._cart )
             return True
         return False
 
     def load( self ):
         selection_result = db_accessor.run_select(
-                    "SELECT * FROM ItemSelection WHERE item_id=%s AND cart_id=%s",
-                    self._item.get_id(),self._cart.get_id())
+                    "SELECT * FROM ItemSelection WHERE item_name=%s AND item_source=%s"
+                    " AND cart_id=%s",
+                    self._item.get_name(),self._item.get_source(),
+                    self._cart.get_id())
         if selection_result:
-            item_id,cart_id,quantity = selection_result[0]
+            item_name,item_source,cart_id,quantity = selection_result[0]
             self._quantity = quantity
             self._access_set_by_reference( self._cart )
             return True
@@ -382,16 +370,18 @@ class ItemSelection( DAO ):
     def update( self ):
         if not self._write_access: return False
         return db_accessor.run_change(
-                    "UPDATE ItemSelection SET quantity=%s WHERE cart_id=%s AND item_id=%s",
+                    "UPDATE ItemSelection SET quantity=%s WHERE cart_id=%s "
+                    "AND item_name=%s AND item_source=%s",
                     self.get_quantity(),
                     self.get_cart().get_id(),
-                    self.get_item().get_id())
+                    self.get_item().get_name(),self.get_item.get_source())
 
     def remove( self ):
         if not self._write_access: return False
         if db_accessor.run_change(
-                    "DELETE FROM ItemSelection WHERE cart_id=%s AND item_id=%s",
-                    self.get_cart().get_id(),self.get_item().get_id()):
+                    "DELETE FROM ItemSelection WHERE cart_id=%s AND item_name=%s AND item_source=%s",
+                    self.get_cart().get_id(),
+                    self.get_item().get_name(),self.get_item().get_source()):
             self._access_remove()
             return True
         return False
@@ -409,13 +399,14 @@ def clear_database_TESTING():
             account.remove()
 
     # clear items
-    select_result = db_accessor.run_select( "SELECT id FROM Item" )
+    select_result = db_accessor.run_select( "SELECT * FROM Item" )
     if select_result:
-        for item_id in select_result:
-            item = Item(item_id)
-            item.load()
-            item.remove()
-        
+        for item_name,item_source in select_result:
+            # cannot gain write access - perform removal manually
+            db_accessor.run_change(
+                    "DELETE FROM Item WHERE item_name=%s AND item_source=%s",
+                    item_name,item_source)
+
 
 if __name__ == "__main__":
     test_accounts = True
@@ -465,7 +456,7 @@ if __name__ == "__main__":
         my_cart = ShoppingCart( my_account )
         assert my_cart.load() == True
 
-        my_item = Item(42,"My Item","https://my_source.com")
+        my_item = Item("My Item","https://my_source.com")
         if not my_item.load():
             assert my_item.create() == True
         assert my_item.load() == True
@@ -480,7 +471,7 @@ if __name__ == "__main__":
         my_cart = ShoppingCart( my_account )
         assert my_cart.load() == True
 
-        my_item = Item(42)
+        my_item = Item("My Item","https://my_source.com")
         assert my_item.load() == True
 
         my_selection = ItemSelection( my_cart, my_item )
