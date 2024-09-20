@@ -1,17 +1,6 @@
 from DAO import Account, ShoppingCart, ItemSelection, Item
 import pdb
 
-# temporary function - need more effecient process
-# returns an id that is not already used by an item
-def get_unused_item_id():
-    item_id = 1
-    while True:
-        item = Item(item_id)
-        if not item.load():
-            return item_id
-        item_id += 1
-    return False
-
 # class intended to interact with user
 class customer_accessor:
     # account: account that customer is currently viewing/logged into
@@ -80,7 +69,7 @@ class customer_accessor:
     # creates an item with the specified name and source
     # returns the created item, or False for failure to create
     def create_item(self, item_name, item_source):
-        item = Item(get_unused_item_id(), item_name, item_source)
+        item = Item(item_name, item_source)
         if item.create():
             return item
         return False
