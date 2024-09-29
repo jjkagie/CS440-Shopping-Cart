@@ -31,23 +31,25 @@ class DatabaseAccessor:
 
     # ERROR: 0 is interpreted as False
     def run_select( self, sql_command, *argv ):
-        if False in argv or None in argv:
+        try:
+            if False in argv or None in argv:
+                return False
+            sql_args = tuple([str(arg) for arg in argv])
+            return self._connection.run_select( sql_command, sql_args )
+        except:
             return False
-        sql_args = tuple([str(arg) for arg in argv])
-        return self._connection.run_select( sql_command, sql_args )
 
     # ERROR: 0 is interpreted as False
     def run_change( self, sql_command, *argv ):
-        if False in argv or None in argv:
+        try:
+            if False in argv or None in argv:
+                return False
+            sql_args = tuple([str(arg) for arg in argv])
+            return self._connection.run_change( sql_command, sql_args )
+        except:
             return False
-        sql_args = tuple([str(arg) for arg in argv])
-        return self._connection.run_change( sql_command, sql_args )
-
 
 database_accessor = DatabaseAccessor()
-
-
-
 
 
 
