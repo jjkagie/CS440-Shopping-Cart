@@ -1,4 +1,4 @@
-from DAO import Account, ShoppingCart, ItemSelection, Item
+from DAO import Account, ShoppingCart, ItemSelection, Item, pause_connection
 import pdb
 
 # class intended to interact with user
@@ -14,14 +14,15 @@ class customer_accessor:
     # creates an account if it does not already exist
     # returns if the account's creation was successful
     def create_account(self, username, password):
-        self._account = Account(username,password)
-        return self._account.create()
+        account = Account(username,password)
+        return account.create()
 
     # logs into the account, and accesses its cart
     # returns if the login was successful
     def login(self, username, password):
-        self._account = Account(username,password)
-        if self._account.load():
+        account = Account(username,password)
+        if account.load():
+            self._account = account
             self._cart = ShoppingCart(self._account)
             return self._cart.load()
         return False
@@ -29,8 +30,9 @@ class customer_accessor:
     # views the account of a user, and accesses its cart
     # returns if able to view the account
     def view_account(self, username):
-        self._account = Account(username)
+        account = Account(username)
         if self._account.load():
+            self._account = account
             self._cart = ShoppingCart(account)
             return self._cart.load()
         return False
@@ -56,21 +58,24 @@ class customer_accessor:
     # otherwise, returns False
     def get_item_selections(self):
         if self._cart:
-            return self._cart.get_item_selections()
-        return False
+            result = self._cart.get_item_selections()
+        db_accessor.pause()
+        return result
 
     # if logged in, deletes the account
     # returns if deletion was successful
     def delete_account(self):
         if self._account:
             return self._account.remove()
-        return True
+        return False
 
     # creates an item with the specified name and source
     # returns the created item, or False for failure to create
     def create_item(self, item_name, item_source):
         item = Item(item_name, item_source)
         if item.create():
+            return item
+        elif item.load():
             return item
         return False
 
@@ -106,11 +111,13 @@ if __name__ == "__main__":
     # print the items that were added to the cart
     me.view_item_selections()
     # 6. remove items from the cart
-    assert me.remove_item_from_cart(my_item)
+    assert me.remove_item_from_cart(my_item) == True
     # print updated list of items in cart
     me.view_item_selections()
 
     # delete the account (optional)
     assert me.delete_account() == True
+
+    pause_connection()
 
 

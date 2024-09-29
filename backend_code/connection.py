@@ -7,7 +7,7 @@ import pdb
 
 # open_connection, close_connection:
 #   open/close the connection to the database
-#   returns if the operation was successful
+#   returns if the connection is opened/closed
 # commit_changes:
 #   executes all changes that were made into the database
 #   returns if commit was successful
@@ -19,30 +19,35 @@ import pdb
 #   run sql command, then commit changes made to the database
 #   return number of rows modified if successful
 #       otherwise returns None
-
-# NOTE: run_select and run_change will not attempt to 
-#       execute the command if a connection is already open
+# pause:
+#   disconnects from the database temporarily
 class Connection:
-    # config_dict contains the parameters for the mysql.connector.Connect()
+    # config_dict contains the parameters for the mysql.connector.connect()
     def __init__( self, config_dict ):
         self.__connection = None
         self.__cursor = None
         self.__config = config_dict
     
     def open_connection( self ):
+        if self.is_connected():
+            return True
         try:
             self.__connection = mysql.connector.connect(**self.__config)
             self.__cursor = self.__connection.cursor()
-            return self.is_connected()
+            if self.__connection.is_connected():
+                return True
         except:
-            return False
-
-    def is_connected( self ):
-        if self.__connection:
-            return self.__connection.is_connected()
+            pass
+        self.__connection = None
+        self.__cursor = None
         return False
 
+    def is_connected( self ):
+        return self.__connection != None
+
     def close_connection(self):
+        if not self.is_connected():
+            return False
         try:
             self.__cursor.close()
             self.__connection.close()
@@ -62,39 +67,28 @@ class Connection:
         return False
 
     def run_select(self, sql, values=None):
-        results = None
-        if not self.is_connected():
-            self.open_connection()
-            # after opening the connection, catch exceptions to ensure 
-            #   the connection is closed (if one is, return None)
-            try:
-                cursor = self.get_cursor()
-                cursor.execute(sql, values)
-                results = cursor.fetchall()
-            except:
-                pass
-            self.close_connection()
-            
-        return results
+        self.open_connection()
+        try:
+            cursor = self.get_cursor()
+            cursor.execute(sql, values)
+            return cursor.fetchall()
+        except:
+            return None
 
     def run_change(self, sql, values=None):
-        result = None
-        if not self.is_connected():
-            self.open_connection()
-            # after opening the connection, catch exceptions to ensure 
-            #   the connection is closed (if one is, return None)
-            try:
-                cursor = self.get_cursor()
-                cursor.execute(sql, values)
-                self.commit_changes()
-                result = cursor.rowcount
-            except:
-                pass
-            self.close_connection()
-            
-        return result
+        self.open_connection()
+        try:
+            cursor = self.get_cursor()
+            cursor.execute(sql, values)
+            self.commit_changes()
+            return cursor.rowcount
+        except:
+            return None
 
+    def pause( self ):
+        return self.close_connection()
 
+    # close connection when self is destructed
+    def __del__( self ):
+        self.close_connection()
 
-
-    
