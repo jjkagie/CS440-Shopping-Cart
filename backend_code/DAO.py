@@ -387,6 +387,10 @@ class ItemSelection( DAO ):
         return False
 
 
+# temporarily closes connection to free resources
+def pause_connection():
+    db_accessor.pause()
+
 
 ######################### Large Scale Managment ################################
 # (not used by users)
@@ -434,6 +438,8 @@ def create_tables():
             )
     """)
 
+    pause_connection()
+
 # remove all data in the database
 def clear_database():
     # clear accounts
@@ -453,6 +459,7 @@ def clear_database():
                     "DELETE FROM Item WHERE item_name=%s AND item_source=%s",
                     item_name,item_source)
 
+    pause_connection()
 
 
 
@@ -530,6 +537,8 @@ if __name__ == "__main__":
 
         # delete Michael's account
         assert my_account.remove() == True
+
+    pause_connection()
 
 
 

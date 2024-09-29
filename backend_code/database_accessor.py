@@ -1,5 +1,9 @@
 import connection
-import config
+try:
+    import config
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        """database information must be inserted into config_template, and renamed to config.py""")
 
 # DatabaseAccessor
 ########### Use Cases
@@ -24,6 +28,9 @@ import config
 #       otherwise, number of rows affected
 #   ex: run_change( "INSERT INTO Houses VALUES(%s,%s,%s,%s)", "Blue", "arizona", 25, 215 )
 #           runs "INSERT INTO Houses VALUES(Blue,arizona,25,215)"
+
+# pause:
+#   temporarily pauses the connection to the database
 class DatabaseAccessor:
     def __init__( self ):
         self._config = config.Config().dbinfo()
@@ -48,6 +55,10 @@ class DatabaseAccessor:
             return self._connection.run_change( sql_command, sql_args )
         except:
             return False
+
+    def pause( self ):
+        return self._connection.pause()
+    
 
 database_accessor = DatabaseAccessor()
 
