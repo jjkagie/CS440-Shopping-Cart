@@ -386,10 +386,56 @@ class ItemSelection( DAO ):
             return True
         return False
 
-# clear database
-# NOTE: this method is for testing only
-#       running sql commands outside of DAO should not be necessary
-def clear_database_TESTING():
+
+
+######################### Large Scale Managment ################################
+# (not used by users)
+
+# creates all tables if they do not already exist
+# does not change existing tables
+def create_tables():
+    database_accessor.run_change(
+    """
+    CREATE TABLE Account
+            ( username VARCHAR(64) PRIMARY KEY, 
+          password VARCHAR(64)
+            )
+    """)
+
+
+    database_accessor.run_change(
+    """
+    CREATE TABLE ShoppingCart
+            ( id VARCHAR(64),  
+          PRIMARY KEY(id), 
+          FOREIGN KEY(id) REFERENCES Account(username)
+            )
+    """)
+
+    database_accessor.run_change(
+    """
+    CREATE TABLE Item
+            ( item_name VARCHAR(64), 
+          item_source VARCHAR(256), 
+          PRIMARY KEY( item_name,item_source )
+            )
+    """)
+
+    database_accessor.run_change(
+    """
+    CREATE TABLE ItemSelection
+            ( item_name VARCHAR(64), 
+          item_source VARCHAR(256), 
+          cart_id VARCHAR(64), 
+          quantity int, 
+          PRIMARY KEY (item_name, item_source, cart_id), 
+          FOREIGN KEY (item_name, item_source) REFERENCES Item(item_name, item_source), 
+          FOREIGN KEY (cart_id) REFERENCES ShoppingCart(id)
+            )
+    """)
+
+# remove all data in the database
+def clear_database():
     # clear accounts
     select_result = db_accessor.run_select( "SELECT * FROM Account" )
     if select_result:
@@ -406,6 +452,10 @@ def clear_database_TESTING():
             db_accessor.run_change(
                     "DELETE FROM Item WHERE item_name=%s AND item_source=%s",
                     item_name,item_source)
+
+
+
+
 
 
 if __name__ == "__main__":

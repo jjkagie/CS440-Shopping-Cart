@@ -81,7 +81,7 @@ class customer_accessor:
         if selections:
             for selection in selections:
                 item = selection.get_item()
-                print( f"{item.get_name()} from {item.get_source()} ({selection.get_quantity()})")
+                print( f"{item.get_name()} from {item.get_source()} (x{selection.get_quantity()})")
         print()
         
 

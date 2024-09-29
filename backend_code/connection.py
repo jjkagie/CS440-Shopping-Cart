@@ -30,9 +30,12 @@ class Connection:
         self.__config = config_dict
     
     def open_connection( self ):
-        self.__connection = mysql.connector.connect(**self.__config)
-        self.__cursor = self.__connection.cursor()
-        return self.is_connected()
+        try:
+            self.__connection = mysql.connector.connect(**self.__config)
+            self.__cursor = self.__connection.cursor()
+            return self.is_connected()
+        except:
+            return False
 
     def is_connected( self ):
         if self.__connection:
@@ -40,10 +43,13 @@ class Connection:
         return False
 
     def close_connection(self):
-        self.__cursor.close()
-        self.__connection.close()
-        self.__cursor = None
-        self.__connection = None
+        try:
+            self.__cursor.close()
+            self.__connection.close()
+            self.__cursor = None
+            self.__connection = None
+        except:
+            pass
         return not self.is_connected()
 
     def get_cursor(self):
