@@ -28,7 +28,7 @@ class Config(object):
     HOST = '-----'      # fill with your host address
     DATABASE = '-----'  # fill with your database
     USER = '-----'      # fill with your username
-    PASSWORD = '-----'  # fill with your user's password
+    PASSWORD = 'secret data'  # fill with your user's password
     PORT = 0
 
     CHARSET = 'utf8'
