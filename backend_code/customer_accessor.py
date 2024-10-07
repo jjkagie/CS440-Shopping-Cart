@@ -1,4 +1,4 @@
-from DAO import Account, ShoppingCart, ItemSelection, Item, pause_connection
+from .DAO import Account, ShoppingCart, ItemSelection, Item, pause_connection, db_accessor
 import pdb
 
 # class intended to interact with user

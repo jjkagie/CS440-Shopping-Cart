@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Shopping Cart</title>
+        <link rel="stylesheet" href="/static/css/main.css">
+    </head>
+
+    <body>
+        <form action="/add" method="POST">
+            <label for="name">Item Name: </label>
+            <input type="text" id="name", name="name">
+
+            <label for="source">Source: </label>
+            <input type="text" id="source", name="source">
+            <br>
+
+            <button type="submit" id="add">Add Item</button>
+        </form>
+        <form action="/remove" method="POST">
+            <label for="removeName">Name To Remove: </label>
+            <input type="text" id="removeName", name="removeName">
+
+            <label for="removeSource">Source To Remove: </label>
+            <input type="text" id="removeSource" name="removeSource">
+            <br>
+
+            <button type="submit" id="remove">Remove Item</button>
+        </form>
+        <table id="dynamic-list">
+            <tr>
+                <th>Name | </th>
+                <th>Source</th>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{item.get_item().get_name()}} |</td>
+                <td>{{item.get_item().get_source()}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+
+    <script src="/static/js/scripts.js"></script>
+</html>

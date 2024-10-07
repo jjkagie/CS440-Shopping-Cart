@@ -1,4 +1,4 @@
-from database_accessor import database_accessor as db_accessor
+from .database_accessor import database_accessor as db_accessor
 
 import pdb
 
