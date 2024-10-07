@@ -228,7 +228,7 @@ class ShoppingCart(DAO):
         return False
 
     def load( self ):
-        if not self._account.write_access(): return False
+        if not self._account.read_access(): return False
         self._access_set_by_reference( self._account )
         return True
 
