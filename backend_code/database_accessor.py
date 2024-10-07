@@ -82,7 +82,7 @@ class DatabaseAccessor:
 
     def pause( self ):
         return self._connection.pause()
-    
+
 
 database_accessor = DatabaseAccessor()
 

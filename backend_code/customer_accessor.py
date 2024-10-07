@@ -31,7 +31,7 @@ class customer_accessor:
     # returns if able to view the account
     def view_account(self, username):
         account = Account(username)
-        if self._account.load():
+        if account.load():
             self._account = account
             self._cart = ShoppingCart(account)
             return self._cart.load()
@@ -59,7 +59,6 @@ class customer_accessor:
     def get_item_selections(self):
         if self._cart:
             result = self._cart.get_item_selections()
-        db_accessor.pause()
         return result
 
     # if logged in, deletes the account
