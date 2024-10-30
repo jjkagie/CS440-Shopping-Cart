@@ -160,6 +160,13 @@ class customer_accessor:
         else:
             print( f"\nItem Created attempt = {False}" )
 
+    # currently customer_acccessor does not subscribe to broker_dao
+    #   no need to implement these methods
+    def on_change(self, dao_id, values):
+        pass
+
+    def on_delete(self, dao_id):
+        pass
 
         
         

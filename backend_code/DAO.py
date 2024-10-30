@@ -1,5 +1,6 @@
 from .database_accessor import database_accessor as db_accessor
-
+from Broker.Broker import broker_dao
+from backend_code.key_values import Key, Values
 import pdb
 
 # DAO (Database Access Object)
@@ -56,16 +57,16 @@ class DAO:
         self._access_remove()
     
     def create( self ):
-        raise NotImplemented("Attempted to call abstract method")
+        raise NotImplementedError("Attempted to call abstract method")
 
     def update( self ):
-        raise NotImplemented("Attempted to call abstract method")
+        raise NotImplementedError("Attempted to call abstract method")
 
     def remove( self ):
-        raise NotImplemented("Attempted to call abstract method")
+        raise NotImplementedError("Attempted to call abstract method")
 
     def load( self ):
-        raise NotImplemented("Attempted to call abstract method")
+        raise NotImplementedError("Attempted to call abstract method")
 
     def write_access( self ):
         return self._write_access
@@ -117,6 +118,15 @@ class Account(DAO):
         super().__init__()
         self._username = username
         self._password = password
+        broker_dao.subscribe(self.get_broker_id(),self.get_values())
+
+    def get_broker_id(self):
+        return ID("Account", {"username":self._username})
+
+    def get_values(self):
+        result = Values()
+        result.values = {"password":self._password}
+        return result
 
     def get_username( self ):
         if not self._read_access: return False
@@ -184,6 +194,14 @@ class Account(DAO):
                 return True
         return False
 
+    def on_change(self, dao_id, values):
+        self._password = values["password"]
+        self._access_remove()
+
+    def on_delete(self, dao_id):
+        self._access_remove()
+
+
 # Account (DAO)
 ##### keys/values
 # keys:
@@ -201,6 +219,15 @@ class ShoppingCart(DAO):
     def __init__( self, account ):
         super().__init__()
         self._account = account
+        broker_dao.subscribe(self.get_broker_id(),self.get_values())
+
+    def get_broker_id(self):
+        return ID("ShoppingCart", {"account":self._account.get_username()})
+
+    def get_values(self):
+        result = Values()
+        result.values = {}
+        return result
 
     def get_id( self ):
         if not self._read_access: return False
@@ -257,6 +284,13 @@ class ShoppingCart(DAO):
         for selection in self.get_item_selections():
             selection.remove()
 
+    def on_change(self, dao_id, values):
+        pass
+
+    def on_delete(self, dao_id):
+        self._access_remove()
+
+
 # Item (DAO)
 ##### keys/values
 # keys:
@@ -274,6 +308,15 @@ class Item(DAO):
         super().__init__()
         self._name = item_name
         self._source = item_source
+        broker_dao.subscribe(self.get_broker_id(),self.get_values())
+
+    def get_broker_id(self):
+        return ID("Item", {"name":self._name,"source":self._source})
+
+    def get_values(self):
+        result = Values()
+        result.values = {}
+        return result
 
     def get_name( self ):
         if not self.read_access(): return False
@@ -312,6 +355,12 @@ class Item(DAO):
         db_accessor.run_change("DELETE FROM Item WHERE item_name=%s AND item_source=%s",
                                self.get_name(),self.get_source())
 
+    def on_change(self, dao_id, values):
+        pass
+
+    def on_delete(self, dao_id):
+        self._access_remove()
+
 # ItemSelection (DAO)
 ##### keys/values
 # keys:
@@ -328,6 +377,17 @@ class ItemSelection( DAO ):
         self._cart = cart
         self._item = item
         self._quantity = quantity
+        broker_dao.subscribe(self.get_broker_id(),self.get_values())
+
+    def get_broker_id(self):
+        return ID("ItemSelection", {"cart":self._cart.get_id(),
+                                    "item_name":self._item.get_name(),
+                                    "item_source":self._item.get_source()})
+
+    def get_values(self):
+        result = Values()
+        result.values = {"quantity":self._quantity}
+        return result
 
     def get_cart( self ):
         if not self.read_access(): return False
@@ -385,6 +445,12 @@ class ItemSelection( DAO ):
             self._access_remove()
             return True
         return False
+
+    def on_change(self, dao_id, values):
+        self._quantity = values["quantity"]
+
+    def on_delete(self, dao_id):
+        self._access_remove()
 
 
 # temporarily closes connection to free resources
