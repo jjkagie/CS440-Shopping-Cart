@@ -51,8 +51,12 @@ class Broker_CA(Broker):
                "add_item_to_cart", "remove_item_from_cart", \
                "get_item_selections", "delete_account", \
                "create_item", "view_item_selections"
-broker_ca = Broker_CA()
 
+broker_ca = Broker_CA()
+try:
+    broker_dao = Broker_DAO()
+except e:
+    raise NotImplementedError("Broker_DAO was not implemented")
 
 if __name__ == "__main__":
     class Subscriber:
