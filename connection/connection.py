@@ -36,12 +36,12 @@ class Connector_MOCK(Connector):
         self.__connections = dict()
 
     def send_message( self, message ):
-        return self.__connection[ message.recipent ].receive_message(message)
+        return self.__connections[ message.recipent ].receive_message(message)
 
     # explicitly create a way to connect to an IP and PORT.
     #   (this should not be necessary for the peer-to-peer system)
     def add_connection( self, connection_info, application ):
-        self.__connection[ connection_info ] = application
+        self.__connections[ connection_info ] = application
 
 
 # change to "connector = Connector()"
