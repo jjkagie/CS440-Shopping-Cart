@@ -1,6 +1,7 @@
 from message.message import Message
 from network.network import NetworkNode, NetworkNodeReference
 from connection.connection import connector
+from backend_code.customer_accessor import customer_accessor
 import pdb
 
 class Application:
@@ -8,7 +9,7 @@ class Application:
         self.__main_node = NetworkNode(self, connection_info = connection_info)
         self.handled_nodes = list() # nodes that application is solely responsible for
         self.saved_nodes = list() # nodes that application saved (disregard for connection)
-        self.user_accessor = None
+        self.ca = customer_accessor()
 
     # self: node wanting to connect to network
     # connection_info: node already connected to network

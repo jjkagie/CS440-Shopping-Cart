@@ -2,6 +2,8 @@ from .database_accessor import database_accessor as db_accessor
 
 import pdb
 
+accounts = dict()
+
 # DAO (Database Access Object)
 ########## Intended Use Cases:
 # create, update, load, and remove data from database
@@ -117,6 +119,7 @@ class Account(DAO):
         super().__init__()
         self._username = username
         self._password = password
+        self._cart = None
 
     def get_username( self ):
         if not self._read_access: return False
@@ -129,8 +132,9 @@ class Account(DAO):
 
     def get_cart( self ):
         if not self._read_access: return False
-        cart = ShoppingCart(self)
+        cart = self._cart
         cart.load()
+        cart._access_set_by_reference(self)
         return cart
 
     def set_password( self, password ):
@@ -142,26 +146,23 @@ class Account(DAO):
     # automate creation of cart when Account is created
     def create( self ):
         if self._password:
-            if db_accessor.run_change(
-                    "INSERT INTO Account VALUES (%s,%s)",
-                    self._username, self._password ):
+            if self._username not in accounts:
+                accounts[ self._username ] = self
                 self._access_set_all()
-                ShoppingCart(self).create()
+                self._cart = ShoppingCart(self)
+                self._cart.create()
                 return True
         return False
 
     def update( self ):
         if not self._write_access: return False
-        return db_accessor.run_change(
-                "UPDATE Account SET password=%s WHERE username=%s",
-                self._password,self._username)
+        return True
 
     def remove( self ):
         if not self._write_access: return False
-        if self.get_cart().remove():
-            db_accessor.run_change(
-                    "DELETE FROM Account WHERE username=%s",
-                    self._username )
+        if self._username in accounts:
+            del accounts[self._username]
+            self._access_remove()
             return True
         return False
 
@@ -170,17 +171,20 @@ class Account(DAO):
     def load( self ):
         # case password provided
         if self._password:
-            if db_accessor.run_select(
-                    "SELECT * FROM Account WHERE username=%s AND password=%s",
-                    self._username,self._password):
-                self._access_set_all()
-                return True
+            if self._username in accounts:
+                account = accounts[ self._username ]
+                if account._password == self._password:
+                    self._cart = account._cart
+                    self._access_set_all()
+                    self._cart.load()
+                    return True
         # case no password provided
         else:
-            if db_accessor.run_select(
-                    "SELECT * FROM Account WHERE username=%s",
-                    self._username):
+            if self._username in accounts:
+                account = accounts[ self._username ]
+                self._cart = account._cart
                 self._access_set_readonly()
+                self._cart.load()
                 return True
         return False
 
@@ -201,30 +205,24 @@ class ShoppingCart(DAO):
     def __init__( self, account ):
         super().__init__()
         self._account = account
+        self._selections = list()
 
     def get_id( self ):
         if not self._read_access: return False
         return self._account.get_username()
 
     def create( self ):
-        if db_accessor.run_change(
-                "INSERT INTO ShoppingCart VALUES (%s)",
-                    self._account.get_username()):
-            self._access_set_by_reference( self._account )
-            return True
-        return False
-
+        self._access_set_by_reference( self._account )
+        return True
+        
     def update( self ):
         return False
 
     def remove( self ):
         if self._write_access:
             self.clear()
-            if db_accessor.run_change(
-                    "DELETE FROM ShoppingCart WHERE id=%s",
-                    self.get_id()):
-                self._access_remove()
-                return True
+            self._access_remove()
+            return True
         return False
 
     def load( self ):
@@ -237,25 +235,14 @@ class ShoppingCart(DAO):
     def get_item_selections( self ):
         if not self.read_access(): return False
         # generate a list of data about the selections
-        selections = list()
-        selection_results = db_accessor.run_select(
-                                "SELECT * FROM ItemSelection WHERE cart_id=%s",
-                                self.get_id())
-        if selection_results:
-            # load DAOs from the Data of the ItemSelections
-            for item_name,item_source,cart_id,quantity in selection_results:
-                item = Item(item_name,item_source)
-                item.load()
-                selection = ItemSelection(self,item)
-                selection.load()
-                selections.append( selection )
-        return selections
+        return self._selections
 
     # remove all selections associated with this cart
     def clear( self ):
         if not self.write_access(): return False
-        for selection in self.get_item_selections():
+        for selection in self._selections:
             selection.remove()
+        self._selections = list()
 
 # Item (DAO)
 ##### keys/values
@@ -284,33 +271,20 @@ class Item(DAO):
         return self._source
 
     def create( self ):
-        if db_accessor.run_change(
-                    "INSERT INTO Item VALUES (%s,%s)",
-                    self._name,self._source):
-            self._access_set_readonly()
-            return True
-        return False
+        self._access_set_readonly()
+        return True
 
     def load( self ):
-        selection_result = db_accessor.run_select(
-                                "SELECT * FROM Item WHERE item_name=%s AND item_source=%s",
-                                self._name,self._source)
-        if selection_result:
-            item_name, item_source = selection_result[0]
-            self._name = item_name
-            self._source = item_source
-            self._access_set_readonly()
-            return True
-        return False
-
+        self._access_set_readonly()
+        return True
+    
     def update( self ):
         if not self._write_access: return False
         raise False # Item does not have values to change
 
     def remove( self ):
         if not self._write_access: return False
-        db_accessor.run_change("DELETE FROM Item WHERE item_name=%s AND item_source=%s",
-                               self.get_name(),self.get_source())
+        self._access_remove()
 
 # ItemSelection (DAO)
 ##### keys/values
@@ -323,7 +297,7 @@ class Item(DAO):
 ##### access
 # access = Cart's access
 class ItemSelection( DAO ):
-    def __init__( self, cart, item, quantity = None ):
+    def __init__( self, cart, item, quantity = 1 ):
         super().__init__()
         self._cart = cart
         self._item = item
@@ -346,50 +320,30 @@ class ItemSelection( DAO ):
         self._quantity = quantity
 
     def create( self ):
-        if db_accessor.run_change(
-                    "INSERT INTO ItemSelection VALUES (%s,%s,%s,%s)",
-                    self._item.get_name(),self._item.get_source(),
-                    self._cart.get_id(),self._quantity):
-            self._access_set_by_reference( self._cart )
-            return True
-        return False
+        self._access_set_by_reference( self._cart )
+        if not self.write_access():
+            return False
+        self._cart._selections.append(self)
+        return True
 
     def load( self ):
-        selection_result = db_accessor.run_select(
-                    "SELECT * FROM ItemSelection WHERE item_name=%s AND item_source=%s"
-                    " AND cart_id=%s",
-                    self._item.get_name(),self._item.get_source(),
-                    self._cart.get_id())
-        if selection_result:
-            item_name,item_source,cart_id,quantity = selection_result[0]
-            self._quantity = quantity
-            self._access_set_by_reference( self._cart )
-            return True
-        return False
+        self._access_set_by_reference( self._cart )
+        return True
 
     def update( self ):
         if not self._write_access: return False
-        return db_accessor.run_change(
-                    "UPDATE ItemSelection SET quantity=%s WHERE cart_id=%s "
-                    "AND item_name=%s AND item_source=%s",
-                    self.get_quantity(),
-                    self.get_cart().get_id(),
-                    self.get_item().get_name(),self.get_item.get_source())
+        return True
 
     def remove( self ):
         if not self._write_access: return False
-        if db_accessor.run_change(
-                    "DELETE FROM ItemSelection WHERE cart_id=%s AND item_name=%s AND item_source=%s",
-                    self.get_cart().get_id(),
-                    self.get_item().get_name(),self.get_item().get_source()):
-            self._access_remove()
-            return True
-        return False
-
+        self._cart._selections.remove(self)
+        self._access_remove()
+        return True
+        
 
 # temporarily closes connection to free resources
 def pause_connection():
-    db_accessor.pause()
+    pass
 
 
 ######################### Large Scale Managment ################################
@@ -398,71 +352,14 @@ def pause_connection():
 # creates all tables if they do not already exist
 # does not change existing tables
 def create_tables():
-    database_accessor.run_change(
-    """
-    CREATE TABLE Account
-            ( username VARCHAR(64) PRIMARY KEY, 
-          password VARCHAR(64)
-            )
-    """)
-
-
-    database_accessor.run_change(
-    """
-    CREATE TABLE ShoppingCart
-            ( id VARCHAR(64),  
-          PRIMARY KEY(id), 
-          FOREIGN KEY(id) REFERENCES Account(username)
-            )
-    """)
-
-    database_accessor.run_change(
-    """
-    CREATE TABLE Item
-            ( item_name VARCHAR(64), 
-          item_source VARCHAR(256), 
-          PRIMARY KEY( item_name,item_source )
-            )
-    """)
-
-    database_accessor.run_change(
-    """
-    CREATE TABLE ItemSelection
-            ( item_name VARCHAR(64), 
-          item_source VARCHAR(256), 
-          cart_id VARCHAR(64), 
-          quantity int, 
-          PRIMARY KEY (item_name, item_source, cart_id), 
-          FOREIGN KEY (item_name, item_source) REFERENCES Item(item_name, item_source), 
-          FOREIGN KEY (cart_id) REFERENCES ShoppingCart(id)
-            )
-    """)
-
-    pause_connection()
+    try:
+        self._accounts
+    except Exception as e:
+        self._accounts = dict()
 
 # remove all data in the database
 def clear_database():
-    # clear accounts
-    select_result = db_accessor.run_select( "SELECT * FROM Account" )
-    if select_result:
-        for username,password in select_result:
-            account = Account(username,password)
-            account.load()
-            account.remove()
-
-    # clear items
-    select_result = db_accessor.run_select( "SELECT * FROM Item" )
-    if select_result:
-        for item_name,item_source in select_result:
-            # cannot gain write access - perform removal manually
-            db_accessor.run_change(
-                    "DELETE FROM Item WHERE item_name=%s AND item_source=%s",
-                    item_name,item_source)
-
-    pause_connection()
-
-
-
+    self._accounts = dict()
 
 
 if __name__ == "__main__":

@@ -49,17 +49,18 @@ class customer_accessor:
     # returns if removal was sucecssful
     def remove_item_from_cart(self, item):
         if self._cart:
-            item_selection = ItemSelection(self._cart, item)
-            item_selection.load()
-            return item_selection.remove()
+            for selection in self.get_item_selections():
+                if selection.get_item().get_name() == item.get_name():
+                    selection.remove()
+                    return True
         return False
 
     # if logged in or viewing, returns a list of the cart's ItemSelections
     # otherwise, returns False
     def get_item_selections(self):
         if self._cart:
-            result = self._cart.get_item_selections()
-        return result
+            return self._cart.get_item_selections()
+        return False
 
     # if logged in, deletes the account
     # returns if deletion was successful
