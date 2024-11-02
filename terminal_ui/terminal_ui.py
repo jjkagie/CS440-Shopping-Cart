@@ -1,8 +1,5 @@
-from backend_code.customer_accessor import Item, pause_connection, customer_accessor
+from backend_code.customer_accessor import Item, pause_connection
 import pdb
-
-
-
 
 
 
@@ -57,8 +54,6 @@ class SelectionNode:
             pass
         elif self._parent:
             self.__UA = self._parent.get_UA()
-        else:
-            self.__UA = customer_accessor()
         return self.__UA
 
     # displays the progress in the selection system
@@ -75,7 +70,7 @@ class Selection_LoginMenu(SelectionNode):
                           title = "Login Menu",
                           access_prompt = "Login",
                           customer_accessor = customer_accessor)
-
+    
     def _generate_children_nodes( self ):
         children = [Selection_Login(parent=self),
                     Selection_View(parent=self),
@@ -92,6 +87,11 @@ class Selection_CreateAccount(SelectionNode):
 
     def begin( self ):
         print( "\n" + str(self) )
+        if self.get_UA().application.account:
+            print( f"ERROR: Account for {self.get_UA().application.account.get_username()} " + \
+                   f"already exists on this application" )
+            return True
+        
         username = input( "Username: " )
         password = input( "Password: " )
         if not self.get_UA().create_account( username, password ):
@@ -129,11 +129,23 @@ class Selection_View(SelectionNode):
     def begin( self ):
         print( "\n" + str(self) )
         username = input( "Username: " )
-        if not self.get_UA().view_account( username ):
-            print( "ERROR: Unable to view account" )
-            return True
-        # after, begin the viewing selections
-        return Selection_Viewing(parent=self).begin()
+
+        if self.get_UA().view_account( username ):
+            # after, begin the viewing selections
+            return Selection_Viewing(parent=self).begin()
+        else:
+            # search for external accounts
+            network_node = self.get_UA().application._Application__main_node.search_for_username(\
+                                        username = username)
+            if network_node:
+                account = network_node.get_account()
+                if account:
+                    accounts[ username ] = account
+                    if self.get_UA().view_account(username):
+                        return Selection_Viewing(parent=self).begin()
+
+        print( "ERROR: Unable to view account" )
+        return True
 
 
 

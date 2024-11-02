@@ -36,6 +36,9 @@ class NetworkNode_Super:
     def get_id(self):
         raise NotImplementedError
 
+    def get_account(self):
+        raise NotImplementedError
+
     def receive_message( self, message ):
         match message.type:
             case Message.request_available_node:
@@ -60,6 +63,10 @@ class NetworkNode_Super:
                 return self.get_network_node( **(message.args) )
             case Message.get_id:
                 return self.get_id( **(message.args) )
+            case Message.get_account:
+                return self.get_account( **(message.args) )
+            case Message.search_for_username:
+                return self.search_for_username( **(message.args) )
             
             case _:
                 raise NotImplementedError("Message type {message.type} not recognized")
@@ -256,6 +263,22 @@ class NetworkNode(NetworkNode_Super):
                 node.connection_info = connection_info
         return
 
+    def get_account( self ):
+        return self.application.account
+
+    def search_for_username( self, username, nodes_searched = 0 ):
+        nodes_searched += 1
+        account = self.application.account
+
+        if account and account.get_username() == username:
+            return NetworkNodeReference(self.connection_info, node_id = self.id)
+
+        if nodes_searched >= (2**self.network_bit_size):
+            return False
+
+        return self.network_connections[0].search_for_username(
+                        username = username, nodes_searched = nodes_searched )
+            
 
 class NetworkNodeReference(NetworkNode_Super):
     def __init__( self, connection_info, node_id = None ):
@@ -348,7 +371,25 @@ class NetworkNodeReference(NetworkNode_Super):
                           node_id=node_id)
         return connector.send_message(message)
 
+    def get_account( self ):
+        message = Message(Message.get_account,
+                               sender = self.connection_info,
+                               recipent = self.connection_info,
+                               recipent_id = self.id)
+        return connector.send_message(message)
 
+    def search_for_username( self, username, nodes_searched = 0 ):
+        message = Message(Message.search_for_username,
+                               sender = self.connection_info,
+                               recipent = self.connection_info,
+                               recipent_id = self.id,
+                          username = username)
+        return connector.send_message(message)
+
+
+
+
+    
 
 
 

@@ -13,6 +13,8 @@ class Message:
     publish_size_increase = 9
     get_network_node = 10
     get_id = 11
+    get_account = 12
+    search_for_username = 13
     
     # message_type: Message.type
     # sender: connection_info

@@ -15,7 +15,7 @@ if __name__ == "__main__":
         selection_obj = Selection_LoginMenu(customer_accessor = customer_accessor)
         selection_obj.begin()
         print( "Program End Success" )
-    except Exception as e:
+    except NotImplementedError as e:
         print( f"An Unexpected Error Occurred: {e}" )
 
     
