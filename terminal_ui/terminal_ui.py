@@ -1,5 +1,9 @@
-from customer_accessor import Item, pause_connection, customer_accessor
+from backend_code.customer_accessor import Item, pause_connection, customer_accessor
 import pdb
+
+
+
+
 
 
 class SelectionNode:
@@ -10,8 +14,9 @@ class SelectionNode:
 
     def __init__( self, parent = None,
                   title = "TITLE_NOT_SET",
-                  access_prompt = "ACCESS_PROMPT_NOT_SET"):
-        self.__UA = None
+                  access_prompt = "ACCESS_PROMPT_NOT_SET",
+                  customer_accessor = None):
+        self.__UA = customer_accessor
         self._parent = parent
         self._access_prompt = access_prompt
         self._title = title
@@ -65,10 +70,11 @@ class SelectionNode:
 
 ############# Starting Menu ###########
 class Selection_LoginMenu(SelectionNode):
-    def __init__( self, parent = None ):
+    def __init__( self, parent = None, customer_accessor = None ):
         super().__init__( parent = parent, 
                           title = "Login Menu",
-                          access_prompt = "Login" )
+                          access_prompt = "Login",
+                          customer_accessor = customer_accessor)
 
     def _generate_children_nodes( self ):
         children = [Selection_Login(parent=self),
@@ -82,7 +88,7 @@ class Selection_CreateAccount(SelectionNode):
     def __init__( self, parent = None ):
         super().__init__( parent = parent, 
                           title = "Create Account",
-                          access_prompt = "Create Account" )
+                          access_prompt = "Create Account")
 
     def begin( self ):
         print( "\n" + str(self) )
@@ -339,8 +345,8 @@ if __name__ == "__main__":
     except Exception as e:
         print( f"An Unexpected Error Occurred: {e}" )
 
-    while True:
-        input()
+    
+    print("Program End")
 
 
 

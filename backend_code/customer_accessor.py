@@ -1,4 +1,4 @@
-from .DAO import Account, ShoppingCart, ItemSelection, Item, pause_connection, db_accessor
+from .DAO import Account, ShoppingCart, ItemSelection, Item, pause_connection
 import pdb
 
 # class intended to interact with user
@@ -23,7 +23,10 @@ class customer_accessor:
         account = Account(username,password)
         if account.load():
             self._account = account
-            self._cart = ShoppingCart(self._account)
+            if self._account.get_cart():
+                self._cart = self._account.get_cart()
+            else:
+                self._cart = ShoppingCart(self._account)
             return self._cart.load()
         return False
 
@@ -33,7 +36,10 @@ class customer_accessor:
         account = Account(username)
         if account.load():
             self._account = account
-            self._cart = ShoppingCart(account)
+            if self._account.get_cart():
+                self._cart = self._account.get_cart()
+            else:
+                self._cart = ShoppingCart(self._account)
             return self._cart.load()
         return False
 
