@@ -1,5 +1,3 @@
-from .database_accessor import database_accessor as db_accessor
-
 import pdb
 
 accounts = dict()
@@ -176,6 +174,7 @@ class Account(DAO):
                 if account._password == self._password:
                     self._cart = account._cart
                     self._access_set_all()
+                    self._cart._account = self
                     self._cart.load()
                     return True
         # case no password provided
@@ -183,6 +182,7 @@ class Account(DAO):
             if self._username in accounts:
                 account = accounts[ self._username ]
                 self._cart = account._cart
+                self._cart._account = self
                 self._access_set_readonly()
                 self._cart.load()
                 return True
