@@ -8,18 +8,28 @@ class customer_accessor:
     _account = None
     _cart = None
     
-    def __init__( self ):
-        pass
+    def __init__( self, application ):
+        self.application = application
 
     # creates an account if it does not already exist
     # returns if the account's creation was successful
     def create_account(self, username, password):
+        # fail if account already linked to application
+        if self.application.account:
+            return False
         account = Account(username,password)
-        return account.create()
+        if account.create():
+            self.application.account = account
+            return True
+        return False
 
     # logs into the account, and accesses its cart
     # returns if the login was successful
     def login(self, username, password):
+        if (not self.application.account) or \
+           (self.application.account.get_username() != username):
+            print( f"Account {self.application.account.get_username()} " + \
+                   f"not linked to account" )
         account = Account(username,password)
         if account.load():
             self._account = account

@@ -9,7 +9,8 @@ class Application:
         self.__main_node = NetworkNode(self, connection_info = connection_info)
         self.handled_nodes = list() # nodes that application is solely responsible for
         self.saved_nodes = list() # nodes that application saved (disregard for connection)
-        self.ca = customer_accessor()
+        self.ca = customer_accessor(self)
+        self.account = None
 
     # self: node wanting to connect to network
     # connection_info: node already connected to network
