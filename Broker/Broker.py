@@ -52,10 +52,16 @@ class Broker_CA(Broker):
                "get_item_selections", "delete_account", \
                "create_item", "view_item_selections"
 
+# DAO Broker
+class Broker_DAO(Broker):
+    def get_handled_messages( self ):
+        return "change", "delete"
+
+
 broker_ca = Broker_CA()
 try:
     broker_dao = Broker_DAO()
-except e:
+except:
     raise NotImplementedError("Broker_DAO was not implemented")
 
 if __name__ == "__main__":

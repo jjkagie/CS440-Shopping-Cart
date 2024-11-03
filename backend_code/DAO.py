@@ -1,6 +1,6 @@
 from .database_accessor import database_accessor as db_accessor
 from Broker.Broker import broker_dao
-from backend_code.key_values import Key, Values
+from backend_code.key_values import ID, Values
 import pdb
 
 # DAO (Database Access Object)
@@ -464,7 +464,7 @@ def pause_connection():
 # creates all tables if they do not already exist
 # does not change existing tables
 def create_tables():
-    database_accessor.run_change(
+    db_accessor.run_change(
     """
     CREATE TABLE Account
             ( username VARCHAR(64) PRIMARY KEY, 
@@ -473,7 +473,7 @@ def create_tables():
     """)
 
 
-    database_accessor.run_change(
+    db_accessor.run_change(
     """
     CREATE TABLE ShoppingCart
             ( id VARCHAR(64),  
@@ -482,7 +482,7 @@ def create_tables():
             )
     """)
 
-    database_accessor.run_change(
+    db_accessor.run_change(
     """
     CREATE TABLE Item
             ( item_name VARCHAR(64), 
@@ -491,7 +491,7 @@ def create_tables():
             )
     """)
 
-    database_accessor.run_change(
+    db_accessor.run_change(
     """
     CREATE TABLE ItemSelection
             ( item_name VARCHAR(64), 

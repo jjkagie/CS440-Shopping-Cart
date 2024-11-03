@@ -34,6 +34,7 @@ class customer_accessor:
         
         broker_ca.publish_login(publisher=self,
                                 was_successful=result)
+        return result
 
     # views the account of a user, and accesses its cart
     # returns if able to view the account
@@ -80,6 +81,7 @@ class customer_accessor:
 
         broker_ca.publish_get_item_selections(publisher=self,
                                            selections=result)
+        return result
     
     # if logged in, deletes the account
     # returns if deletion was successful
@@ -105,6 +107,7 @@ class customer_accessor:
         broker_ca.publish_create_item(publisher=self,
                                          item=result,
                                       quantity=quantity)
+        return result
 
         # cannot implement with this style due to event-driven architecture
     # if logged in or viewing, print all items in the cart

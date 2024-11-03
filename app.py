@@ -10,10 +10,8 @@ app = Flask(__name__)
 
 @app.route("/")
 def home(username="Michael",password="my_password"):
-    print(username,password)
-    if not accessor.login(username,password):
-        return redirect("/login")
-    return render_template("main.html", items=accessor.get_item_selections())
+    redirect("/login")
+    return render_template("login.html")
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -22,12 +20,10 @@ def login():
         password = str(request.form.get('password'))
 
         if accessor.login(username,password):
-            print(1)
-            return redirect('main.html')
+            return render_template("main.html",items=accessor.get_item_selections())
         else:
-            print(2)
             accessor.create_account(username,password)
-            return redirect('main.html')
+            return render_template("main.html",items=accessor.get_item_selections())
         
     return render_template("login.html")
 
@@ -37,19 +33,23 @@ def add():
         name = str(request.form.get('name'))
         source = str(request.form.get('source'))
         print(name, source)
-        item = accessor.create_item(name,source)
-        if item:
-            accessor.add_item_to_cart(item, 1)
+        item = accessor.create_item(name,source,1)
+        #if item:
+        #   accessor.add_item_to_cart(item, 1)
     
     return render_template("main.html",items=accessor.get_item_selections())
 
 @app.route("/remove", methods=['GET','POST'])
 def remove():
+    item = 0
     if request.method == 'POST':
         name = str(request.form.get("removeName"))
         source = str(request.form.get("removeSource"))
         print(name, source)
-        item = accessor.create_item(name,source)
+        items = accessor.get_item_selections()
+        for i in items:
+            if i.get_item().get_name() == name and i.get_item().get_source() == source:
+                item = i.get_item()
         if item:
             accessor.remove_item_from_cart(item)
 
