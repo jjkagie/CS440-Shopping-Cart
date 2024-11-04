@@ -1,4 +1,5 @@
 from backend_code.customer_accessor import Item, pause_connection
+from connection.connection import ConnectionInfo
 import pdb
 
 
@@ -74,7 +75,9 @@ class Selection_LoginMenu(SelectionNode):
     def _generate_children_nodes( self ):
         children = [Selection_Login(parent=self),
                     Selection_View(parent=self),
-                    Selection_CreateAccount(parent=self)]
+                    Selection_CreateAccount(parent=self),
+                    Selection_GetNetworkNode(parent=self),
+                    Selection_IncreaseNetworkSize(parent=self)]
         return children
 
 ############# Access Actions ###########
@@ -147,7 +150,43 @@ class Selection_View(SelectionNode):
         print( "ERROR: Unable to view account" )
         return True
 
+# Attempting to check out a node
+class Selection_GetNetworkNode(SelectionNode):
+    def __init__( self, parent = None ):
+        super().__init__( parent = parent,
+                          title = "Check Out Node",
+                          access_prompt = "Check Out Node" )
 
+    def begin( self ):
+        print( "\n" + str(self) )
+        print( "Enter information of node existing in the network" )
+        ip = input( "IP: " )
+        port = input( "PORT: " )
+        connection_info = ConnectionInfo(ip, port)
+        try:
+            if self.get_UA().application.network_node_check_out(connection_info):
+                print( "Added into network" )
+                return True
+        except Exception as e:
+            pdb.set_trace()
+        print( "ERROR: unable to add into network" )
+        return True
+
+
+# increase size of network
+class Selection_IncreaseNetworkSize(SelectionNode):
+    def __init__( self, parent = None ):
+        super().__init__( parent = parent,
+                          title = "Increase Network Size",
+                          access_prompt = "Increase Network Size" )
+
+    def begin( self ):
+        print( "\n" + str(self) )
+        print( "Preparing to increase network size" )
+        self.get_UA().application.prepare_size_increase()
+        input( "Press Enter when all networks finished preparing: " )
+        self.get_UA().application.publish_size_increase()
+        return True
 
 
     

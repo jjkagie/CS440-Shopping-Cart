@@ -22,6 +22,7 @@ class Application:
         node_reference.get_id()
         self.__main_node.requesting_node = True
         node_reference.request_available_node(requester=self.__main_node)
+        return True
 
     # provided_node is the node provided from network_node_check_out
     # provided_node will become self's main connection node
