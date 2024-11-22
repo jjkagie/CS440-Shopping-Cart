@@ -57,6 +57,13 @@ class CustomerAccessor:
             return friendship.remove()
         return False
 
+    def get_sent_request( self, friend_id ):
+        if not self.account: return False
+        return self.account.get_sent_request(friend_id)
+
+    def get_received_request( self, friend_id ):
+        if not self.account: return False
+        return self.account.get_received_request(friend_id)
 
 
 

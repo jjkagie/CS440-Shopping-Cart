@@ -115,6 +115,25 @@ class Account(DAO):
             requests.append(request)
         return requests
 
+    def get_sent_request( self, friend_id ):
+        requests = self.get_sent_requests()
+        if requests:
+            requests = [request for request in requests if request.target == str(friend_id)]
+            if requests:
+                return requests[0]
+        return False
+        
+
+    def get_received_request( self, friend_id ):
+        requests = self.get_received_requests()
+        if requests:
+            requests = [request for request in requests if request.requester == str(friend_id)]
+            if requests:
+                return requests[0]
+        return False
+
+
+
 
 
 
