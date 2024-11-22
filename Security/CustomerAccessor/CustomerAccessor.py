@@ -22,7 +22,7 @@ class CustomerAccessor:
 
     def get_userid( self ):
         if self.account:
-            return self.account.get_userid()
+            return self.account.get_id()
         return False
 
     def get_friend_username( self, userid ):
