@@ -3,6 +3,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip3 install --break-system-packages requests
+RUN pip install mysql-connector-python
 COPY . .
-EXPOSE 5001
-CMD ["python", "main.py"]
+EXPOSE 5003
+CMD ["python", "friends.py"]

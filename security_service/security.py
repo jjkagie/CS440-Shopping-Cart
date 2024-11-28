@@ -43,7 +43,9 @@ def account_login():
 
     ca = security_CA()
     result = ca.login(username, password)
-    if not result: return jsonify(Jsonable(error="Unable to login"))
+    if not result:
+        return jsonify(Jsonable(error="Unable to login",success=0))
+
     userid = ca.get_userid()
     if not userid:
        return jsonify(Jsonable(error="Unable to get user id"))
