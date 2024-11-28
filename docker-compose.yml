@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  main-service:
+    build: ./main_service
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./main_service:/app/main_service
+
+  security-service:
+    build: ./security_service
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./security_service:/app/security_service
+
+
