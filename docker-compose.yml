@@ -15,4 +15,12 @@ services:
     volumes:
       - ./security_service:/app/security_service
 
+  friends-service:
+    build: ./friends_service
+    ports:
+      - "5003:5003"
+    volumes:
+      - ./friends_service:/app/friends_service
+
+
 

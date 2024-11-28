@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Friends</h1>
+
+        Friends = {{friends}}<br>
+        Sent Requests = {{sent_requests}}<br>
+        Received Requests = {{received_requests}}<br>
+
+        <form action="{{ url_for('send_request', account_id=account_id) }}" method="post" class="add-form">
+            <h2>Send Request</h2>
+            <input type="hidden" name="account_id" value="{{ account_id }}">
+            <input type="text" name="friend_id" placeholder="Friend ID" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
+
+
+

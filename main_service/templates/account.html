@@ -8,15 +8,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to CS440 Project 3 - Shopping Cart</h1>
+        <h1>Welcome to Account</h1>
+
         <nav>
-            <a href="{{ url_for('load_create_account') }}" class="button">Create Account</a>
-        </nav>
-        <nav>
-            <a href="{{ url_for('load_login_account') }}" class="button">Access Account</a>
+            <a href="{{ url_for('friends', account_id=account_id) }}" class="button">Access Friends</a>
         </nav>
 
     </div>
 </body>
 </html>
+
+
 
