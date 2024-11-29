@@ -58,10 +58,32 @@ def send_request(account_id, friend_id):
     ca.login(account_id)
 
     result = ca.send_friend_request(friend_id)
-    if result:
-        return jsonify(Jsonable(success=1))
-    else:
-        return jsonify(Jsonable(success=0))
+    return jsonify(Jsonable(function="send_request", 
+                            success=bool(result)))
+
+@app.route('/accounts/<int:account_id>/friends/requests/accept', methods=['POST'])
+def accept_request(account_id, friend_id):
+    ca = friend_CA()
+    ca.login(account_id)
+
+    request = ca.get_received_request( friend_id )
+    if not request: return False
+    result = ca.accept_request( request )
+
+    return jsonify(Jsonable(function="accept_request", 
+                            success=bool(result)))
+
+@app.route('/accounts/<int:account_id>/friends/requests/reject', methods=['POST'])
+def reject_request(account_id, friend_id):
+    ca = friend_CA()
+    ca.login(account_id)
+
+    request = ca.get_received_request( friend_id )
+    if not request: return False
+    result = ca.reject_request( request )
+
+    return jsonify(Jsonable(function="reject_request", 
+                            success=bool(result)))
 
 
 if __name__ == '__main__':

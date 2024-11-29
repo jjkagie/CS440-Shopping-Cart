@@ -145,13 +145,37 @@ def send_request(account_id):
     friend_id = request.form["friend_id"]
     my_json=jsonify(Jsonable(friend_id=friend_id, account_id=account_id))
 
-    #return jsonify(Jsonable("Stopped before requests.post"))
-    result = requests.post(FRIENDS_SERVICE_URL
-                           + f'/{account_id}/friends/requests/send', 
-                           json=my_json)
-    # return the same template as the friend function
-    return friends(account_id)
+    link= f'{FRIENDS_SERVICE_URL}/{account_id}/friends/requests/send'
+    #return my_json
+    request_result = requests.post(link, json=my_json)
+    #return my_json
+    #template_result = friends(account_id)
 
+    return request_result
+
+
+@app.route('/accounts/<int:account_id>/friends/requests/accept', methods=['POST'])
+def accept_request(account_id):
+    friend_id = request.form["friend_id"]
+    my_json=jsonify(Jsonable(friend_id=friend_id, account_id=account_id))
+
+    request_result = requests.post(FRIENDS_SERVICE_URL
+                           + f'/{account_id}/friends/requests/acccept', 
+                           json=my_json)
+    
+    return request_result
+
+
+@app.route('/accounts/<int:account_id>/friends/requests/reject', methods=['POST'])
+def reject_request(account_id):
+    friend_id = request.form["friend_id"]
+    my_json=jsonify(Jsonable(friend_id=friend_id, account_id=account_id))
+
+    request_result = requests.post(FRIENDS_SERVICE_URL
+                           + f'/{account_id}/friends/requests/reject', 
+                           json=my_json)
+    
+    return request_result
 
 
 
