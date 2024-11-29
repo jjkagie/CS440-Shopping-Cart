@@ -67,7 +67,7 @@ def accept_request(account_id, friend_id):
     ca.login(account_id)
 
     request = ca.get_received_request( friend_id )
-    if not request: return False
+    if not request: return jsonify(Jsonable(success=False))
     result = ca.accept_request( request )
 
     return jsonify(Jsonable(function="accept_request", 
@@ -79,7 +79,7 @@ def reject_request(account_id, friend_id):
     ca.login(account_id)
 
     request = ca.get_received_request( friend_id )
-    if not request: return False
+    if not request: return jsonify(Jsonable(success=False))
     result = ca.reject_request( request )
 
     return jsonify(Jsonable(function="reject_request", 
