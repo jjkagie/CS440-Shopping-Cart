@@ -7,7 +7,7 @@ from jsonable import Jsonable
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-MAIN_SERVICE_URL = 'http://main-service:5001/accounts'
+MAIN_SERVICE_URL = 'http://main-service:5001'
 SECURITY_SERVICE_URL = 'http://security-service:5002/accounts'
 FRIENDS_SERVICE_URL = 'http://friends-service:5003/accounts' # need to append account#
 
@@ -42,7 +42,6 @@ def add_account():
         return jsonify({"error":str(e)})
 
     json_result = response.json()
-    return json_result
 
     return redirect(url_for('index'))
 
@@ -68,7 +67,7 @@ def account_login():
         userid = int(json_result["userid"])
         return redirect(url_for('load_account', account_id=userid))
 
-    return json_result
+    return redirect(url_for('load_create_account'))
 
 
 
@@ -209,6 +208,14 @@ def reject_request(account_id):
 
 
 
+@app.route('/accounts/<int:account_id>/items')
+def items(account_id):
+    return render_template('items.html', account_id=account_id)
+
+@app.route('/accounts/<int:account_id>/friends/access', methods=['POST'])
+def access_friend(account_id):
+    friend_id = request.form["friend_id"]
+    return render_template('items.html', account_id=friend_id)
 
 
 if __name__ == '__main__':

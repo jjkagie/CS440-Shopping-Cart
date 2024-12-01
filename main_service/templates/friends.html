@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Management System</title>
+    <title>Friends</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -13,6 +13,12 @@
         Friends = {{friends}}<br>
         Sent Requests = {{sent_requests}}<br>
         Received Requests = {{received_requests}}<br>
+
+        <form action="{{ url_for('access_friend', account_id=account_id) }}" method="post" class="add-form">
+            <h2>Access Friend</h2>
+            <input type="text" name="friend_id" placeholder="Friend ID" required>
+            <button type="submit">Submit</button>
+        </form>
 
         <form action="{{ url_for('send_request', account_id=account_id) }}" method="post" class="add-form">
             <h2>Send Request</h2>
