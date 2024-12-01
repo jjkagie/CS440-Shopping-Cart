@@ -103,7 +103,7 @@ def friends(account_id):
         flash(f'Error adding account: {str(e)}')
         return jsonify({ "error":str(e)})
 
-    received_requests = response.json()["friends"]
+    sent_requests = response.json()["friends"]
 
     # get received requests
     try:
@@ -115,7 +115,7 @@ def friends(account_id):
         flash(f'Error adding account: {str(e)}')
         return jsonify({ "error":str(e)})
 
-    sent_requests = response.json()["friends"]
+    received_requests = response.json()["friends"]
 
 
     return render_template('friends.html', 
@@ -140,42 +140,72 @@ def get_received_requests(account_id):
                           account_id=account_id)
     return result
 
+
 @app.route('/accounts/<int:account_id>/friends/requests/send', methods=['POST'])
 def send_request(account_id):
     friend_id = request.form["friend_id"]
-    my_json=jsonify(Jsonable(friend_id=friend_id, account_id=account_id))
 
-    link= f'{FRIENDS_SERVICE_URL}/{account_id}/friends/requests/send'
-    #return my_json
-    request_result = requests.post(link, json=my_json)
-    #return my_json
-    #template_result = friends(account_id)
+    my_json = jsonify(Jsonable(account_id=account_id, friend_id=friend_id)).json
 
-    return request_result
+    try:
+        link = f'{FRIENDS_SERVICE_URL}/{account_id}/friends/requests/send'
+        response = requests.post(link, json=my_json)
+        response.raise_for_status()
+        flash('Success!')
+
+    except requests.RequestException as e:
+        flash(f'Error adding account: {str(e)}')
+        return jsonify(Jsonable( function="send_request", 
+                                 error=str(e)))
+
+    result = response.json()
+
+    return friends(account_id)
 
 
 @app.route('/accounts/<int:account_id>/friends/requests/accept', methods=['POST'])
 def accept_request(account_id):
     friend_id = request.form["friend_id"]
-    my_json=jsonify(Jsonable(friend_id=friend_id, account_id=account_id))
 
-    request_result = requests.post(FRIENDS_SERVICE_URL
-                           + f'/{account_id}/friends/requests/acccept', 
-                           json=my_json)
-    
-    return request_result
+    my_json = jsonify(Jsonable(account_id=account_id, friend_id=friend_id)).json
+
+    try:
+        link = f'{FRIENDS_SERVICE_URL}/{account_id}/friends/requests/accept'
+        response = requests.post(link, json=my_json)
+        response.raise_for_status()
+        flash('Success!')
+
+    except requests.RequestException as e:
+        flash(f'Error adding account: {str(e)}')
+        return jsonify(Jsonable( function="accept_request", 
+                                 error=str(e)))
+
+    result = response.json()
+
+    return friends(account_id)
 
 
 @app.route('/accounts/<int:account_id>/friends/requests/reject', methods=['POST'])
 def reject_request(account_id):
     friend_id = request.form["friend_id"]
-    my_json=jsonify(Jsonable(friend_id=friend_id, account_id=account_id))
 
-    request_result = requests.post(FRIENDS_SERVICE_URL
-                           + f'/{account_id}/friends/requests/reject', 
-                           json=my_json)
-    
-    return request_result
+    my_json = jsonify(Jsonable(account_id=account_id, friend_id=friend_id)).json
+
+    try:
+        link = f'{FRIENDS_SERVICE_URL}/{account_id}/friends/requests/reject'
+        response = requests.post(link, json=my_json)
+        response.raise_for_status()
+        flash('Success!')
+
+    except requests.RequestException as e:
+        flash(f'Error adding account: {str(e)}')
+        return jsonify(Jsonable( function="reject_request", 
+                                 error=str(e)))
+
+    result = response.json()
+
+    return friends(account_id)
+
 
 
 

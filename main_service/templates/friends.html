@@ -16,21 +16,18 @@
 
         <form action="{{ url_for('send_request', account_id=account_id) }}" method="post" class="add-form">
             <h2>Send Request</h2>
-            <input type="hidden" name="account_id" value="{{ account_id }}">
             <input type="text" name="friend_id" placeholder="Friend ID" required>
             <button type="submit">Submit</button>
         </form>
 
         <form action="{{ url_for('accept_request', account_id=account_id) }}" method="post" class="add-form">
             <h2>Accept Request</h2>
-            <input type="hidden" name="account_id" value="{{ account_id }}">
             <input type="text" name="friend_id" placeholder="Friend ID" required>
             <button type="submit">Submit</button>
         </form>
 
         <form action="{{ url_for('reject_request', account_id=account_id) }}" method="post" class="add-form">
             <h2>Reject Request</h2>
-            <input type="hidden" name="account_id" value="{{ account_id }}">
             <input type="text" name="friend_id" placeholder="Friend ID" required>
             <button type="submit">Submit</button>
         </form>
