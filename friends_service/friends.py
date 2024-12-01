@@ -46,14 +46,16 @@ def get_received_requests(account_id):
 
     requests = ca.get_received_requests()
     if type(requests) == list:
-        return jsonify(Jsonable(friends=[request.target for request in requests]))
+        return jsonify(Jsonable(friends=[request.requester for request in requests]))
     return jsonify(Jsonable(function="get_received_requests", 
                             error="Unable to get received requests"))
 
 
 @app.route('/accounts/<int:account_id>/friends/requests/send', methods=['POST'])
-def send_request(account_id, friend_id):
-    return jsonify(Jsonable("Successfully called send_request"))
+def send_request(account_id):
+    account_id = request.json['account_id']
+    friend_id = request.json['friend_id']
+
     ca = friend_CA()
     ca.login(account_id)
 
@@ -61,26 +63,39 @@ def send_request(account_id, friend_id):
     return jsonify(Jsonable(function="send_request", 
                             success=bool(result)))
 
+
 @app.route('/accounts/<int:account_id>/friends/requests/accept', methods=['POST'])
-def accept_request(account_id, friend_id):
+def accept_request(account_id):
+    account_id = request.json['account_id']
+    friend_id = request.json['friend_id']
+
     ca = friend_CA()
     ca.login(account_id)
 
-    request = ca.get_received_request( friend_id )
-    if not request: return jsonify(Jsonable(success=False))
-    result = ca.accept_request( request )
+    friend_request = ca.get_received_request(friend_id)
+
+    if friend_request:
+        result = ca.accept_request(friend_request)
+    else:
+        result = False
 
     return jsonify(Jsonable(function="accept_request", 
                             success=bool(result)))
 
 @app.route('/accounts/<int:account_id>/friends/requests/reject', methods=['POST'])
-def reject_request(account_id, friend_id):
+def reject_request(account_id):
+    account_id = request.json['account_id']
+    friend_id = request.json['friend_id']
+
     ca = friend_CA()
     ca.login(account_id)
 
-    request = ca.get_received_request( friend_id )
-    if not request: return jsonify(Jsonable(success=False))
-    result = ca.reject_request( request )
+    friend_request = ca.get_received_request(friend_id)
+
+    if friend_request:
+        result = ca.reject_request(friend_request)
+    else:
+        result = False
 
     return jsonify(Jsonable(function="reject_request", 
                             success=bool(result)))
