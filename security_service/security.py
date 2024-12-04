@@ -55,6 +55,12 @@ def account_login():
                             success=1))
 
 
+@app.route('/accounts/<int:account_id>/username/get')
+def get_username(account_id):
+    ca = security_CA()
+    return jsonify(Jsonable(ca.get_friend_username(account_id)))
+
+
 
 if __name__ == '__main__':
    app.run(host='0.0.0.0', port=5002, debug=True)

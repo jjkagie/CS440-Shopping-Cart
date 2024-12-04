@@ -22,5 +22,11 @@ services:
     volumes:
       - ./friends_service:/app/friends_service
 
+  item-service:
+    build: ./item_service
+    ports:
+      - "5004:5004"
+    volumes:
+      - ./item_service:/app/item_service
 
 

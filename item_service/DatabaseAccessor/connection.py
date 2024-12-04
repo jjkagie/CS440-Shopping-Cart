@@ -91,4 +91,3 @@ class Connection:
     # close connection when self is destructed
     def __del__( self ):
         self.close_connection()
-

@@ -34,6 +34,8 @@ class CustomerAccessor:
         account = AccountView( username = username )
         account.load()
         return account.get_id()
+    
+
 
 
 

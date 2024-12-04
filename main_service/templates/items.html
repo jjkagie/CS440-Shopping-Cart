@@ -12,6 +12,42 @@
 
         Account ID = {{account_id}}<br>
     </div>
+
+    <table id="dynamic-list">
+        <tr>
+            <th>Name | </th>
+            <th>Source</th>
+        </tr>
+        {% for item in items %}
+        <tr>
+            <td>{{item[0]}} |</td>
+            <td>{{item[1]}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if not friend %}
+    <form action="{{url_for('add_item', account_id=account_id)}}" method="POST">
+        <label for="name">Item Name: </label>
+        <input type="text" id="name", name="name">
+
+        <label for="source">Source: </label>
+        <input type="text" id="source", name="source">
+        <br>
+
+        <button type="submit" id="add">Add Item</button>
+    </form>
+    <form action="{{url_for('remove_item', account_id=account_id)}}" method="POST">
+        <label for="removeName">Name To Remove: </label>
+        <input type="text" id="removeName", name="removeName">
+
+        <label for="removeSource">Source To Remove: </label>
+        <input type="text" id="removeSource" name="removeSource">
+        <br>
+
+        <button type="submit" id="remove">Remove Item</button>
+    </form>
+    {% endif %}
 </body>
 </html>
 

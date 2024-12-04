@@ -10,7 +10,7 @@ app.secret_key = 'your_secret_key_here'
 MAIN_SERVICE_URL = 'http://main-service:5001'
 SECURITY_SERVICE_URL = 'http://security-service:5002/accounts'
 FRIENDS_SERVICE_URL = 'http://friends-service:5003/accounts' # need to append account#
-
+ITEM_SERVICE_URL = 'http://item-service:5004/accounts'
 
 
 @app.route('/')
@@ -210,12 +210,66 @@ def reject_request(account_id):
 
 @app.route('/accounts/<int:account_id>/items')
 def items(account_id):
-    return render_template('items.html', account_id=account_id)
+    link = f'{SECURITY_SERVICE_URL}/{account_id}/username/get'
+    response = requests.get(link)
+    username = eval(response.json()['other'])[0]
+
+    link = f'{ITEM_SERVICE_URL}/{username}/items'
+    response = requests.get(link, timeout=10)
+    my_items = response.json()
+
+    return render_template('items.html', account_id=account_id, items=my_items, friend=False)
+
 
 @app.route('/accounts/<int:account_id>/friends/access', methods=['POST'])
 def access_friend(account_id):
     friend_id = request.form["friend_id"]
-    return render_template('items.html', account_id=friend_id)
+
+    link = f'{SECURITY_SERVICE_URL}/{friend_id}/username/get'
+    response = requests.get(link)
+    username = eval(response.json()['other'])[0]
+
+    link = f'{ITEM_SERVICE_URL}/{username}/items'
+    response = requests.get(link, timeout=10)
+    my_items = response.json()
+
+    return render_template('items.html', account_id=friend_id, items = my_items, friend=True)
+
+@app.route('/accounts/<int:account_id>/items/add', methods=['GET','POST'])
+def add_item(account_id):
+    link = f'{SECURITY_SERVICE_URL}/{account_id}/username/get'
+    response = requests.get(link)
+    username = eval(response.json()['other'])[0]
+
+    if request.method == 'POST':
+        name = str(request.form.get('name'))
+        source = str(request.form.get('source'))
+
+    my_json = jsonify(Jsonable(name=name,source=source)).json
+
+    link = f'{ITEM_SERVICE_URL}/{username}/items/add/{name}/{source}'
+    response = requests.post(link, json=my_json)
+
+    return redirect(url_for('items', account_id=account_id))
+
+
+@app.route('/accounts/<int:account_id>/items/remove', methods=['GET','POST'])
+def remove_item(account_id):
+    link = f'{SECURITY_SERVICE_URL}/{account_id}/username/get'
+    response = requests.get(link)
+    username = eval(response.json()['other'])[0]
+
+    if request.method == 'POST':
+        name = str(request.form.get('removeName'))
+        source = str(request.form.get('removeSource'))
+
+    my_json = jsonify(Jsonable(name=name,source=source)).json
+
+    link = f'{ITEM_SERVICE_URL}/{username}/items/remove/{name}/{source}'
+    response = requests.post(link, json=my_json)
+
+    return redirect(url_for('items', account_id=account_id))
+
 
 
 if __name__ == '__main__':
